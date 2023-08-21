@@ -63,4 +63,19 @@
         android:summaryOn="@string/settings_wakelock_on_summary"
         android:title="@string/settings_wakelock" />
 
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="sendSMS"
+        android:summaryOff="Sending SMS when internet is not available is off"
+        android:summaryOn="Sending SMS when internet is not available is on"
+        android:title="Send SMS" />
+
+    <ListPreference
+        android:defaultValue="09126930456"
+        android:entries="@array/settings_phone_number"
+        android:entryValues="@array/settings_phone_number"
+        android:summary="Desired target phone number for sending SMS"
+        android:key="smsNumber"
+        android:title="SMS number"/>
+
 </PreferenceScreen>

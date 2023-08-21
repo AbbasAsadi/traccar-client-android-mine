@@ -182,6 +182,8 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
         findPreference<Preference>(KEY_ACCURACY)?.isEnabled = enabled
         findPreference<Preference>(KEY_BUFFER)?.isEnabled = enabled
         findPreference<Preference>(KEY_WAKELOCK)?.isEnabled = enabled
+        findPreference<Preference>(KEY_SEND_SMS)?.isEnabled = enabled
+        findPreference<Preference>(KEY_SMS_NUMBER)?.isEnabled = enabled
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
@@ -194,6 +196,8 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
             (requireActivity().application as MainApplication).handleRatingFlow(requireActivity())
         } else if (key == KEY_DEVICE) {
             findPreference<Preference>(KEY_DEVICE)?.summary = sharedPreferences.getString(KEY_DEVICE, null)
+        } else if(key == KEY_SEND_SMS) {
+            findPreference<Preference>(KEY_SMS_NUMBER)?.isEnabled = sharedPreferences.getBoolean(KEY_SEND_SMS, false)
         }
     }
 
@@ -238,6 +242,19 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
 
     private fun startTrackingService(checkPermission: Boolean, initialPermission: Boolean) {
         var permission = initialPermission
+        val requiredPermissions: MutableSet<String> = HashSet()
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+            requiredPermissions.add(Manifest.permission.SEND_SMS)
+        }
+        permission = initialPermission
+        permission = requiredPermissions.isEmpty()
+        if (!permission) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(requiredPermissions.toTypedArray(), PERMISSIONS_REQUEST_SMS)
+            }
+            return
+        }
+
         if (checkPermission) {
             val requiredPermissions: MutableSet<String> = HashSet()
             if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -323,8 +340,11 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
         const val KEY_STATUS = "status"
         const val KEY_BUFFER = "buffer"
         const val KEY_WAKELOCK = "wakelock"
+        const val KEY_SEND_SMS = "sendSMS"
+        const val KEY_SMS_NUMBER = "smsNumber"
         private const val PERMISSIONS_REQUEST_LOCATION = 2
         private const val PERMISSIONS_REQUEST_BACKGROUND_LOCATION = 3
+        private const val PERMISSIONS_REQUEST_SMS = 4
     }
 
 }

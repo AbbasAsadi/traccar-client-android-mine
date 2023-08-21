@@ -15,4 +15,8 @@
         <item>@string/settings_accuracy_low</item>
     </string-array>
 
+    <string-array name="settings_phone_number">
+        <item>09126930456</item>
+        <item>09333044797</item>
+    </string-array>
 </resources>
