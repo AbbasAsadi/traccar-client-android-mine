@@ -22,7 +22,6 @@ import android.os.Looper
 import android.telephony.SmsManager
 import android.util.Log
 import android.widget.Toast
-import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import org.traccar.client.DatabaseHelper.DatabaseHandler
 import org.traccar.client.NetworkManager.NetworkHandler
@@ -41,11 +40,11 @@ class TrackingController(private val context: Context) : PositionListener, Netwo
     private val networkManager = NetworkManager(context, this)
 
     private val url: String = preferences.getString(
-            MainFragment.KEY_URL,
-            context.getString(R.string.settings_url_default_value)
+        MainFragment.KEY_URL,
+        context.getString(R.string.settings_url_default_value)
     )!!
     private val buffer: Boolean = preferences.getBoolean(MainFragment.KEY_BUFFER, true)
-    private val sendSMS: Boolean = preferences.getBoolean(MainFragment.KEY_SEND_SMS, false)
+    private val canSendSMS: Boolean = preferences.getBoolean(MainFragment.KEY_SEND_SMS, false)
 
     private var isOnline = networkManager.isOnline
     private var isWaiting = false
@@ -76,8 +75,8 @@ class TrackingController(private val context: Context) : PositionListener, Netwo
         StatusActivity.addMessage(context.getString(R.string.status_location_update))
         if (buffer) {
             write(position)
-            if(sendSMS)
-            sendViaSMS(position)
+            if (canSendSMS)
+                sendViaSMS(position)
         } else {
             send(position)
         }
@@ -85,8 +84,7 @@ class TrackingController(private val context: Context) : PositionListener, Netwo
 
     private fun sendViaSMS(position: Position) {
         val phoneNum = preferences.getString(MainFragment.KEY_SMS_NUMBER, "09126930456")
-         // The number on which you want to send SMS
-        Log.d("TAG4", "sendViaSMS: inside sendSMS")
+        // The number on which you want to send SMS
         val smsManager: SmsManager
         try {
             if (Build.VERSION.SDK_INT >= 23) {
@@ -94,32 +92,34 @@ class TrackingController(private val context: Context) : PositionListener, Netwo
             } else {
                 smsManager = SmsManager.getDefault()
             }
-            Log.d("TAG4", "sendViaSMS: before sendTextMessage")
             smsManager.sendTextMessage(phoneNum, null, getSmsContent(position), null, null)
-            Log.d("TAG4", "sendViaSMS: after sendTextMessage")
+            Log.d(
+                "TAG",
+                "send via sms (id:${position.id} time:${position.time.time / 1000} lat:${position.latitude} lon:${position.longitude})"
+            )
 
-        }catch (e : Exception) {
+        } catch (e: Exception) {
             Log.d("TAG4", "sendViaSMS: Exception")
             Log.d("TAG4", "sendViaSMS: message:${e.message}")
             Toast.makeText(context.applicationContext, e.message.toString(), Toast.LENGTH_LONG)
-                    .show()
+                .show()
         }
     }
 
     private fun getSmsContent(position: Position): String {
         var smsContent: String =
-                ("id:${position.deviceId}\n" +
-                        "timestamp:${(position.time.time / 1000)}\n" +
-                        "lat:${position.latitude}\n" +
-                        "lon:${position.longitude}\n" +
-                        "speed:${position.speed}" +
-                        "bearing:${position.course}" +
-                        "altitude:${position.altitude}" +
-                        "accuracy:${position.accuracy}" +
-                        "batt:${position.battery}")
+            ("id:${position.deviceId}\n" +
+                    "timestamp:${(position.time.time / 1000)}\n" +
+                    "lat:${position.latitude}\n" +
+                    "lon:${position.longitude}\n" +
+//                    "speed:${position.speed}" +
+//                    "bearing:${position.course}" +
+//                    "altitude:${position.altitude}" +
+                    "accuracy:${position.accuracy}\n" +
+                    "batt:${position.battery}\n")
 
         if (position.charging) {
-            smsContent += "charge:${position.charging}"
+            smsContent += "charge:${position.charging}\n"
         }
         if (position.mock) {
             smsContent += "mock ${position.mock}"
@@ -130,7 +130,7 @@ class TrackingController(private val context: Context) : PositionListener, Netwo
     override fun onPositionError(error: Throwable) {}
     override fun onNetworkUpdate(isOnline: Boolean) {
         val message =
-                if (isOnline) R.string.status_network_online else R.string.status_network_offline
+            if (isOnline) R.string.status_network_online else R.string.status_network_offline
         StatusActivity.addMessage(context.getString(message))
         if (!this.isOnline && isOnline) {
             read()
@@ -150,10 +150,10 @@ class TrackingController(private val context: Context) : PositionListener, Netwo
         var formattedAction: String = action
         if (position != null) {
             formattedAction +=
-                    " (id:" + position.id +
-                            " time:" + position.time.time / 1000 +
-                            " lat:" + position.latitude +
-                            " lon:" + position.longitude + ")"
+                " (id:" + position.id +
+                        " time:" + position.time.time / 1000 +
+                        " lat:" + position.latitude +
+                        " lon:" + position.longitude + ")"
         }
         Log.d(TAG, formattedAction)
     }
@@ -179,9 +179,9 @@ class TrackingController(private val context: Context) : PositionListener, Netwo
                 if (success) {
                     if (result != null) {
                         if (result.deviceId == preferences.getString(
-                                        MainFragment.KEY_DEVICE,
-                                        null
-                                )
+                                MainFragment.KEY_DEVICE,
+                                null
+                            )
                         ) {
                             send(result)
                         } else {

@@ -45,7 +45,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import androidx.preference.TwoStatePreference
-import dev.doubledot.doki.ui.DokiActivity
+//import dev.doubledot.doki.ui.DokiActivity
 import java.util.*
 import kotlin.collections.HashSet
 
@@ -210,8 +210,8 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
         if (item.itemId == R.id.status) {
             startActivity(Intent(activity, StatusActivity::class.java))
             return true
-        } else if (item.itemId == R.id.info) {
-            DokiActivity.start(requireContext())
+//        } else if (item.itemId == R.id.info) {
+//            DokiActivity.start(requireContext())
             return true
         }
         return super.onOptionsItemSelected(item)
@@ -292,6 +292,7 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
             val preference = findPreference<TwoStatePreference>(KEY_STATUS)
             preference?.isChecked = false
         }
+        Log.d(TAG, "startTrackingService: ")
     }
 
     private fun stopTrackingService() {
@@ -300,6 +301,7 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
         }
         requireActivity().stopService(Intent(activity, TrackingService::class.java))
         setPreferencesEnabled(true)
+        Log.d(TAG, "stopTrackingService: ")
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
