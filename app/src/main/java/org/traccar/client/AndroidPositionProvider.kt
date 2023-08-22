@@ -32,7 +32,19 @@ class AndroidPositionProvider(context: Context, listener: PositionListener) : Po
     override fun startUpdates() {
         try {
             locationManager.requestLocationUpdates(
-                    provider, if (distance > 0 || angle > 0) MINIMUM_INTERVAL else interval, 0f, this)
+                    provider, if (distance > 0 || angle > 0) {
+                if (isOnline) {
+                    MINIMUM_INTERVAL
+                } else {
+                    MINIMUM_SMS_INTERVAL
+                }
+            } else {
+                if(isOnline) {
+                    interval
+                }else{
+                    smsInterval
+                }
+            }, 0f, this)
         } catch (e: RuntimeException) {
             listener.onPositionError(e)
         }
@@ -75,8 +87,8 @@ class AndroidPositionProvider(context: Context, listener: PositionListener) : Po
     private fun getProvider(accuracy: String?): String {
         return when (accuracy) {
             "high" -> LocationManager.GPS_PROVIDER
-            "low"  -> LocationManager.PASSIVE_PROVIDER
-            else   -> LocationManager.NETWORK_PROVIDER
+            "low" -> LocationManager.PASSIVE_PROVIDER
+            else -> LocationManager.NETWORK_PROVIDER
         }
     }
 

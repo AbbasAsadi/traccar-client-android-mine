@@ -87,20 +87,20 @@ class TrackingController(private val context: Context) : PositionListener, Netwo
         // The number on which you want to send SMS
         val smsManager: SmsManager
         try {
-            if (Build.VERSION.SDK_INT >= 23) {
-                smsManager = context.getSystemService(SmsManager::class.java)
+            smsManager = if (Build.VERSION.SDK_INT >= 23) {
+                context.getSystemService(SmsManager::class.java)
             } else {
-                smsManager = SmsManager.getDefault()
+                SmsManager.getDefault()
             }
             smsManager.sendTextMessage(phoneNum, null, getSmsContent(position), null, null)
             Log.d(
-                "TAG",
+                TAG,
                 "send via sms (id:${position.id} time:${position.time.time / 1000} lat:${position.latitude} lon:${position.longitude})"
             )
 
         } catch (e: Exception) {
-            Log.d("TAG4", "sendViaSMS: Exception")
-            Log.d("TAG4", "sendViaSMS: message:${e.message}")
+            Log.d(TAG, "sendViaSMS: Exception")
+            Log.d(TAG, "sendViaSMS: message:${e.message}")
             Toast.makeText(context.applicationContext, e.message.toString(), Toast.LENGTH_LONG)
                 .show()
         }

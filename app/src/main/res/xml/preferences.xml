@@ -78,4 +78,11 @@
         android:key="smsNumber"
         android:title="SMS number"/>
 
+    <EditTextPreference
+        android:defaultValue="3000"
+        android:inputType="number"
+        android:key="smsInterval"
+        android:summary="@string/settings_interval_summary"
+        android:title="SMS Frequency" />
+
 </PreferenceScreen>

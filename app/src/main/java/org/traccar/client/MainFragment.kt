@@ -15,6 +15,7 @@
  */
 package org.traccar.client
 
+//import dev.doubledot.doki.ui.DokiActivity
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlarmManager
@@ -45,9 +46,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import androidx.preference.TwoStatePreference
-//import dev.doubledot.doki.ui.DokiActivity
 import java.util.*
-import kotlin.collections.HashSet
 
 class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListener {
 
@@ -73,6 +72,14 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
             newValue != null && validateServerURL(newValue.toString())
         }
         findPreference<Preference>(KEY_INTERVAL)?.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
+            try {
+                newValue != null && (newValue as String).toInt() > 0
+            } catch (e: NumberFormatException) {
+                Log.w(TAG, e)
+                false
+            }
+        }
+        findPreference<Preference>(KEY_INTERVAL_SMS)?.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
             try {
                 newValue != null && (newValue as String).toInt() > 0
             } catch (e: NumberFormatException) {
@@ -128,7 +135,7 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
 
     @Suppress("DEPRECATION")
     override fun onDisplayPreferenceDialog(preference: Preference) {
-        if (listOf(KEY_INTERVAL, KEY_DISTANCE, KEY_ANGLE).contains(preference.key)) {
+        if (listOf(KEY_INTERVAL, KEY_INTERVAL_SMS, KEY_DISTANCE, KEY_ANGLE).contains(preference.key)) {
             val f: EditTextPreferenceDialogFragmentCompat =
                 NumericEditTextPreferenceDialogFragment.newInstance(preference.key)
             f.setTargetFragment(this, 0)
@@ -184,6 +191,7 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
         findPreference<Preference>(KEY_WAKELOCK)?.isEnabled = enabled
         findPreference<Preference>(KEY_SEND_SMS)?.isEnabled = enabled
         findPreference<Preference>(KEY_SMS_NUMBER)?.isEnabled = enabled
+        findPreference<Preference>(KEY_INTERVAL_SMS)?.isEnabled = enabled
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
@@ -198,6 +206,7 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
             findPreference<Preference>(KEY_DEVICE)?.summary = sharedPreferences.getString(KEY_DEVICE, null)
         } else if(key == KEY_SEND_SMS) {
             findPreference<Preference>(KEY_SMS_NUMBER)?.isEnabled = sharedPreferences.getBoolean(KEY_SEND_SMS, false)
+            findPreference<Preference>(KEY_INTERVAL_SMS)?.isEnabled = sharedPreferences.getBoolean(KEY_SEND_SMS, false)
         }
     }
 
@@ -272,6 +281,7 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
             setPreferencesEnabled(false)
             ContextCompat.startForegroundService(requireContext(), Intent(activity, TrackingService::class.java))
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+
                 alarmManager.setInexactRepeating(
                     AlarmManager.ELAPSED_REALTIME_WAKEUP,
                     ALARM_MANAGER_INTERVAL.toLong(), ALARM_MANAGER_INTERVAL.toLong(), alarmIntent
@@ -336,6 +346,7 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
         const val KEY_DEVICE = "id"
         const val KEY_URL = "url"
         const val KEY_INTERVAL = "interval"
+        const val KEY_INTERVAL_SMS = "smsInterval"
         const val KEY_DISTANCE = "distance"
         const val KEY_ANGLE = "angle"
         const val KEY_ACCURACY = "accuracy"

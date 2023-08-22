@@ -21,35 +21,38 @@ import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.location.Location
 import android.os.BatteryManager
-import androidx.preference.PreferenceManager
 import android.util.Log
+import androidx.preference.PreferenceManager
 import kotlin.math.abs
 
 abstract class PositionProvider(
     protected val context: Context,
     protected val listener: PositionListener,
-) {
+) : NetworkManager.NetworkHandler {
 
     interface PositionListener {
         fun onPositionUpdate(position: Position)
         fun onPositionError(error: Throwable)
     }
 
+    private val networkManager = NetworkManager(context, this)
+    var isOnline : Boolean = networkManager.isOnline
     protected var preferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
     protected var deviceId = preferences.getString(MainFragment.KEY_DEVICE, "undefined")!!
-    protected var interval = preferences.getString(MainFragment.KEY_INTERVAL, "600")!!.toLong() * 1000
+    protected var interval = preferences.getString(MainFragment.KEY_INTERVAL, "600")!!.toLong() * 1000///
+    protected var smsInterval = preferences.getString(MainFragment.KEY_INTERVAL_SMS, "60000")!!.toLong() * 1000///
     protected var distance: Double = preferences.getString(MainFragment.KEY_DISTANCE, "0")!!.toInt().toDouble()
     protected var angle: Double = preferences.getString(MainFragment.KEY_ANGLE, "0")!!.toInt().toDouble()
     private var lastLocation: Location? = null
-
     abstract fun startUpdates()
     abstract fun stopUpdates()
     abstract fun requestSingleLocation()
 
     protected fun processLocation(location: Location?) {
+        val intervalValue = if(isOnline) interval else smsInterval
         val lastLocation = this.lastLocation
         if (location != null &&
-            (lastLocation == null || location.time - lastLocation.time >= interval || distance > 0
+            (lastLocation == null || location.time - lastLocation.time >= intervalValue || distance > 0
                     && location.distanceTo(lastLocation) >= distance || angle > 0
                     && abs(location.bearing - lastLocation.bearing) >= angle)
         ) {
@@ -78,6 +81,11 @@ abstract class PositionProvider(
     companion object {
         private val TAG = PositionProvider::class.java.simpleName
         const val MINIMUM_INTERVAL: Long = 1000
+        const val MINIMUM_SMS_INTERVAL: Long = 10000
+    }
+
+    override fun onNetworkUpdate(isOnline: Boolean) {
+        this.isOnline = isOnline
     }
 
 }
