@@ -73,13 +73,18 @@ class TrackingController(private val context: Context) : PositionListener, Netwo
 
     override fun onPositionUpdate(position: Position) {
         StatusActivity.addMessage(context.getString(R.string.status_location_update))
-        if (buffer) {
-            write(position)
-            if (canSendSMS)
-                sendViaSMS(position)
-        } else {
-            send(position)
+        if (isOnline) {
+            if (buffer) {
+                write(position)
+                if (canSendSMS)
+                    sendViaSMS(position)
+            } else {
+                send(position)
+            }
+        }else {
+            sendViaSMS(position)
         }
+
     }
 
     private fun sendViaSMS(position: Position) {
